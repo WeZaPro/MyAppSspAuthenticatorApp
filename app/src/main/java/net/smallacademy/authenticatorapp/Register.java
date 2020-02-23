@@ -1,9 +1,16 @@
 package net.smallacademy.authenticatorapp;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
+import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.location.Location;
+import android.location.LocationManager;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Looper;
+import android.provider.Settings;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
@@ -14,9 +21,16 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationListener;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
+import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -33,7 +47,7 @@ import java.util.Map;
 
 public class Register extends AppCompatActivity {
     public static final String TAG = "TAG";
-    EditText mFullName,mEmail,mPassword,mPhone;
+    EditText mFullName, mEmail, mPassword, mPhone;
     Button mRegisterBtn;
     TextView mLoginBtn;
     FirebaseAuth fAuth;
@@ -41,10 +55,18 @@ public class Register extends AppCompatActivity {
     FirebaseFirestore fStore;
     String userID;
 
+    // test
+    FusedLocationProviderClient client;
+    double LAT, LON;
+
+    @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_register);
+
+        // test
+        requestPermissions();
 
         mFullName   = findViewById(R.id.fullName);
         mEmail      = findViewById(R.id.Email);
@@ -63,6 +85,16 @@ public class Register extends AppCompatActivity {
         }
 
 
+        /*mRegisterBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                //test
+                getLocationAddress();
+            }
+        });*/
+
+
         mRegisterBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -70,6 +102,8 @@ public class Register extends AppCompatActivity {
                 final String password = mPassword.getText().toString().trim();
                 final String fullName = mFullName.getText().toString();
                 final String phone    = mPhone.getText().toString();
+
+                getLocationAddress();
 
                 if(TextUtils.isEmpty(email)){
                     mEmail.setError("Email is Required.");
@@ -95,8 +129,7 @@ public class Register extends AppCompatActivity {
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         if(task.isSuccessful()){
 
-
-                            //Toast.makeText(Register.this, "User Created.", Toast.LENGTH_SHORT).show();
+                         //Toast.makeText(Register.this, "User Created.", Toast.LENGTH_SHORT).show();
                             userID = fAuth.getCurrentUser().getUid();
                             DocumentReference documentReference = fStore.collection("users").document(userID);
                             Map<String,Object> user = new HashMap<>();
@@ -120,12 +153,11 @@ public class Register extends AppCompatActivity {
                             FirebaseDatabase database = FirebaseDatabase.getInstance();
                             DatabaseReference myRef = database.getReference("users");
 
-                            Users models = new Users(userID,fullName,email,password,1234,5678);
+                            Users models = new Users(userID,fullName,email,password,LAT,LON);
+                            Log.d("check","LONG INIT "+LON);
 
                             myRef.child(userID).setValue(models);
                             Toast.makeText(Register.this, "User Created."+fullName, Toast.LENGTH_SHORT).show();
-
-
 
                         }else {
                             Toast.makeText(Register.this, "Error ! " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();
@@ -146,4 +178,39 @@ public class Register extends AppCompatActivity {
         });
 
     }
+
+    private void getLocationAddress() {
+
+        client = LocationServices.getFusedLocationProviderClient(this);
+        client.getLastLocation().addOnSuccessListener(Register.this, new OnSuccessListener<Location>() {
+            @Override
+            public void onSuccess(Location location) {
+
+                if (location != null) {
+
+                    // ส่งค่าข้อมูล ไปที่ MapActivity
+                    /*Intent i = new Intent(MainActivity.this, MapActivity.class);
+                    i.putExtra("LON", location.getLatitude());
+                    i.putExtra("LAT", location.getLongitude());
+                    startActivity(i);*/
+
+                    LAT = location.getLatitude();
+                    LON = location.getLongitude();
+                    Log.d("check","Add LONG "+location.getLongitude());
+
+                     Toast.makeText(Register.this,"Long "+location.getLongitude(),Toast.LENGTH_SHORT).show();
+                }
+
+                // getAddress + writeDataToFirebase
+                //addAddress(location);
+            }
+
+        });
+    }
+
+    // Track Location ต้องขอ Permission ก่อน
+    private void requestPermissions() {
+        ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION}, 1);
+    }
+
 }
