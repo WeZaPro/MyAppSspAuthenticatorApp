@@ -8,17 +8,19 @@ public class Users {
     String password;
     double Lat;
     double Long;
+    String token;
 
     public Users() {
     }
 
-    public Users(String uid, String name, String email, String password, double lat, double aLong) {
+    public Users(String uid, String name, String email, String password, double lat, double aLong,String token) {
         this.uid = uid;
         this.name = name;
         this.email = email;
         this.password = password;
         Lat = lat;
         Long = aLong;
+        this.token = token;
     }
 
 
@@ -68,5 +70,13 @@ public class Users {
 
     public void setLong(double aLong) {
         Long = aLong;
+    }
+
+    public String getToken() {
+        return token;
+    }
+
+    public void setToken(String token) {
+        this.token = token;
     }
 }

@@ -114,6 +114,7 @@ public class Login extends AppCompatActivity {
                             final String email = task.getResult().getUser().getEmail();
 
                             UserLogin UserLogin = new UserLogin(Uid,name,email,Lat,Lon);
+                            Log.d("lat","LAT "+Lat);
 
                             FirebaseDatabase database = FirebaseDatabase.getInstance();
                             DatabaseReference myRef = database.getReference("login");

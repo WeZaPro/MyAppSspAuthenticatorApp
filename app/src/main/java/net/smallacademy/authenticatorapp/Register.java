@@ -4,6 +4,7 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationManager;
@@ -54,6 +55,7 @@ public class Register extends AppCompatActivity {
     ProgressBar progressBar;
     FirebaseFirestore fStore;
     String userID;
+    String token;
 
     // test
     FusedLocationProviderClient client;
@@ -84,17 +86,6 @@ public class Register extends AppCompatActivity {
             finish();
         }
 
-
-        /*mRegisterBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-
-                //test
-                getLocationAddress();
-            }
-        });*/
-
-
         mRegisterBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -104,6 +95,8 @@ public class Register extends AppCompatActivity {
                 final String phone    = mPhone.getText().toString();
 
                 getLocationAddress();
+                SharedPreferences sharedPref = getSharedPreferences(Constance.MY_PREFS, Context.MODE_PRIVATE);
+                token = sharedPref.getString(Constance.TOKEN, "");
 
                 if(TextUtils.isEmpty(email)){
                     mEmail.setError("Email is Required.");
@@ -153,8 +146,8 @@ public class Register extends AppCompatActivity {
                             FirebaseDatabase database = FirebaseDatabase.getInstance();
                             DatabaseReference myRef = database.getReference("users");
 
-                            Users models = new Users(userID,fullName,email,password,LAT,LON);
-                            Log.d("check","LONG INIT "+LON);
+                            Users models = new Users(userID,fullName,email,password,LAT,LON,token);
+                            Log.d("check","TOKEN INIT "+token);
 
                             myRef.child(userID).setValue(models);
                             Toast.makeText(Register.this, "User Created."+fullName, Toast.LENGTH_SHORT).show();
